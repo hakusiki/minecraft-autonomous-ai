@@ -1,0 +1,4 @@
+MINECRAFT_HOST = "localhost"
+MINECRAFT_PORT = 25565
+
+AI_NAME = "紫識"
