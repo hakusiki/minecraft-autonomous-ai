@@ -1,38 +1,54 @@
-from decision import DecisionSystem
-from response import ResponseSystem
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import json
 
 
-class PurpleAI:
-    def __init__(self):
-        self.decision_system = DecisionSystem()
-        self.response_system = ResponseSystem()
+class AIRequestHandler(BaseHTTPRequestHandler):
 
-    def think(self, situation):
-        decision = self.decision_system.decide(situation)
+    def do_POST(self):
+        if self.path != "/ai":
+            self.send_response(404)
+            self.end_headers()
+            return
 
-        response = self.response_system.respond(situation)
+        length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(length)
 
-        return decision, response
+        try:
+            data = json.loads(body.decode("utf-8"))
+
+            print("Minecraftから受信:")
+            print(data)
+
+            response = {
+                "message": "……受信しました。",
+                "decision": "observe"
+            }
+
+            output = json.dumps(response, ensure_ascii=False).encode("utf-8")
+
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(output)))
+            self.end_headers()
+            self.wfile.write(output)
+
+        except Exception as e:
+            print("エラー:", e)
+
+            self.send_response(400)
+            self.end_headers()
+
+    def log_message(self, format, *args):
+        return
 
 
 def main():
-    ai = PurpleAI()
+    server = HTTPServer(("127.0.0.1", 8765), AIRequestHandler)
 
-    situations = [
-        "danger",
-        "enemy_nearby",
-        "low_health",
-        "unknown",
-        "nothing"
-    ]
+    print("紫識AI Pythonサーバー起動")
+    print("http://127.0.0.1:8765/ai")
 
-    for situation in situations:
-        decision, response = ai.think(situation)
-
-        print(f"状況: {situation}")
-        print(f"紫識の判断: {decision}")
-        print(f"紫識: {response}")
-        print()
+    server.serve_forever()
 
 
 if __name__ == "__main__":
